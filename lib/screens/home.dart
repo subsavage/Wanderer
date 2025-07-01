@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wanderer/utils/colors.dart';
+import 'package:wanderer/widgets/chat_list.dart';
 import 'package:wanderer/widgets/chatbubble.dart';
 
 class Home extends StatefulWidget {
@@ -20,7 +21,7 @@ class _HomeState extends State<Home> {
           "Hey Shubham 👋",
           style: TextStyle(
             fontFamily: "Inter",
-            fontSize: 24,
+            fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -41,35 +42,9 @@ class _HomeState extends State<Home> {
               ),
             ),
           ),
-          Chatbubble(),
-          ElevatedButton(
-            onPressed: null,
-            style: ButtonStyle(
-              backgroundColor: WidgetStateProperty.all(AppColors.buttonBg),
-              shape: WidgetStateProperty.all(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    16,
-                  ), // Change the radius here
-                ),
-              ),
-              padding: WidgetStateProperty.all(
-                EdgeInsets.symmetric(
-                  horizontal: 80,
-                  vertical: 18,
-                ), // Size control
-              ),
-            ),
 
-            child: Text(
-              "Create My Itinerary",
-              style: TextStyle(
-                color: AppColors.bgColor,
-                fontSize: 18,
-                fontFamily: 'Inter',
-              ),
-            ),
-          ),
+          Chatbubble(),
+          Expanded(child: const ChatList()),
           Spacer(),
         ],
       ),
