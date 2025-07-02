@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:wanderer/screens/itenary_screen.dart';
+import 'package:wanderer/screens/result_screen.dart';
 import 'package:wanderer/utils/colors.dart';
 import 'package:wanderer/providers/chat_provider.dart';
 
@@ -15,11 +15,12 @@ class _ChatbubbleState extends ConsumerState<Chatbubble> {
   final TextEditingController _controller = TextEditingController();
 
   void _sendMessage() {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
+    final query = _controller.text.trim();
+    if (query.isEmpty) return;
 
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => ItineraryScreen(userInput: text)),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ResultScreen(userInput: query)),
     );
 
     _controller.clear();
@@ -80,7 +81,7 @@ class _ChatbubbleState extends ConsumerState<Chatbubble> {
             ),
           ),
           child: const Text(
-            "Create My Itenary",
+            "Create My Itinerary",
             style: TextStyle(
               color: Colors.white,
               fontFamily: "Inter",
