@@ -20,7 +20,10 @@ class _ItineraryScreenState extends ConsumerState<ItineraryScreen> {
   @override
   void initState() {
     super.initState();
-    _startGenerating();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startGenerating();
+    });
   }
 
   Future<void> _startGenerating() async {

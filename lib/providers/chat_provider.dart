@@ -1,34 +1,59 @@
+// chat_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:wanderer/agent/agent_client.dart';
 import 'package:wanderer/models/chat_message.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 
-/// Holds the chat history and streams in assistant chunks.
 final chatHistoryProvider =
     StateNotifierProvider<ChatHistoryNotifier, List<ChatMessage>>(
-      (ref) => ChatHistoryNotifier(ref),
+      (ref) => ChatHistoryNotifier(),
     );
 
 class ChatHistoryNotifier extends StateNotifier<List<ChatMessage>> {
-  final Ref ref;
-  ChatHistoryNotifier(this.ref) : super([]);
+  ChatHistoryNotifier() : super([]);
 
+  /// Sends a single‐shot request and appends the full reply.
   Future<void> sendMessage(String text) async {
-    // 1) Append user message
+    // 1) record the user’s query
     state = [...state, ChatMessage.user(text)];
 
-    // 2) Stream assistant response
-    final stream = ref.read(agentClientProvider).streamItinerary(text, state);
+    try {
+      // 2) fire off Gemini.prompt and await the complete response
+      final geminiResp = await Gemini.instance.prompt(parts: [Part.text(text)]);
+      final reply = geminiResp?.output ?? '';
 
-    await for (final chunk in stream) {
-      // Remove any previous partial message
-      final withoutOld =
-          state.where((m) => m.role != MessageRole.assistant).toList();
-      // Append new partial
+      // 3) append the assistant’s reply (final)
+      state = [...state, ChatMessage.assistant(reply, isPartial: false)];
+    } catch (err) {
       state = [
-        ...withoutOld,
-        ChatMessage.assistant(chunk.content, isPartial: !chunk.isFinal),
+        ...state,
+        ChatMessage.assistant(
+          "Sorry, I ran into an error: $err",
+          isPartial: false,
+        ),
       ];
     }
+  }
+
+  /// If you’d rather show a streaming “building…” effect:
+  Future<void> sendMessageStream(String text) async {
+    state = [...state, ChatMessage.user(text)];
+
+    // listen to partial outputs
+    await for (final chunk in Gemini.instance.promptStream(
+      parts: [Part.text(text)],
+    )) {
+      final partial = chunk?.output ?? '';
+      final withoutOld = state.where((m) => m.role != MessageRole.assistant);
+      state = [...withoutOld, ChatMessage.assistant(partial, isPartial: true)];
+    }
+
+    // mark final (replace the last partial with isPartial=false)
+    final lastContent = state.last.content;
+    final withoutOld = state.where((m) => m.role != MessageRole.assistant);
+    state = [
+      ...withoutOld,
+      ChatMessage.assistant(lastContent, isPartial: false),
+    ];
   }
 
   void clear() => state = [];
